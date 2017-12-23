@@ -689,11 +689,12 @@ namespace TheDotFactory
             // create pages
             pages = new ArrayList();
 
+            // current byte value
+            byte currentValue = 0, bitsRead = 0;
+
             // for each row
             for (int row = 0; row < bitmapToGenerate.Height; row++)
             {
-                // current byte value
-                byte currentValue = 0, bitsRead = 0;
 
                 // for each column
                 for (int column = 0; column < bitmapToGenerate.Width; ++column) 
@@ -722,10 +723,10 @@ namespace TheDotFactory
                         bitsRead = 0;
                     }
                 }
-
-                // if we have bits left, add it as is
-                if (bitsRead != 0) pages.Add(currentValue);
             }
+
+            // if we have bits left, add it as is
+            if (bitsRead != 0) pages.Add(currentValue);
 
             // transpose the pages if column major data is requested
             if (m_outputConfig.bitLayout == OutputConfiguration.BitLayout.ColumnMajor)
@@ -1068,6 +1069,11 @@ namespace TheDotFactory
                 // iterator over columns
                 for (int col = 0; col != colCount; ++col)
                 {
+                    if ((row * colCount + col) >= pages.Count)
+                    {
+                        break;
+                    }
+                    
                     // get the byte to output
                     int page = (byte)pages[row * colCount + col];
 
@@ -1110,15 +1116,24 @@ namespace TheDotFactory
                 // iterator over columns
                 for (int col = 0; col != width; ++col)
                 {
-                    // get the byte containing the bit we want
-                    int page = (layout == OutputConfiguration.BitLayout.RowMajor)
-                        ? (byte)pages[row * colCount + (col/8)]
-                        : (byte)pages[(row/8) * colCount + col];
+                    int page = 0;
+                    int bitMask = 0;
 
-                    // make a mask to extract the bit we want
-                    int bitMask = (layout == OutputConfiguration.BitLayout.RowMajor)
-                        ? getBitMask(7 - (col % 8))
-                        : getBitMask(row % 8);
+                   /* try
+                    {
+                        // get the byte containing the bit we want
+                        page = (layout == OutputConfiguration.BitLayout.RowMajor)
+                            ? (byte) pages[row * colCount + (col / 8)]
+                            : (byte) pages[(row / 8) * colCount + col];
+
+                        // make a mask to extract the bit we want
+                        bitMask = (layout == OutputConfiguration.BitLayout.RowMajor)
+                            ? getBitMask(7 - (col % 8))
+                            : getBitMask(row % 8);
+                    }
+                    catch
+                    {
+                    }*/
 
                     // check if bit is set
                     visualizer[row] += (bitMask & page) != 0 ? m_outputConfig.bmpVisualizerChar : " ";
